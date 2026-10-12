@@ -6,7 +6,9 @@ import { entrar } from "@/app/actions/cadastros";
 export default function LoginForm() {
   const [pending, start] = useTransition();
   const [erro, setErro] = useState<string | null>(null);
-  function enviar(fd: FormData) {
+  function enviar(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
     start(async () => {
       const r = await entrar(fd);
       if (r.ok) window.location.assign("/");
@@ -14,7 +16,7 @@ export default function LoginForm() {
     });
   }
   return (
-    <form action={enviar} className="space-y-4">
+    <form onSubmit={enviar} className="space-y-4">
       <div>
         <label className="label" htmlFor="email">E-mail</label>
         <input id="email" name="email" type="email" required className="input" autoComplete="email" />

@@ -19,7 +19,9 @@ export default function ProdutoForm({ produto, categorias, fornecedores, campos,
   const [skuManual, setSkuManual] = useState(!!produto);
   const [foto, setFoto] = useState(produto?.foto_principal_url ?? "");
 
-  function enviar(fd: FormData) {
+  function enviar(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
     start(async () => {
       const r = await salvarProduto(fd);
       if (r.ok) { setAviso({ tipo: "ok", msg: "Produto salvo" }); router.push(`/produtos/${r.id}`); router.refresh(); }
@@ -29,7 +31,7 @@ export default function ProdutoForm({ produto, categorias, fornecedores, campos,
   const extras = (produto?.campos_extras ?? {}) as Record<string, string>;
 
   return (
-    <form action={enviar} className="space-y-5">
+    <form onSubmit={enviar} className="space-y-5">
       {produto && <input type="hidden" name="id" value={produto.id} />}
       <input type="hidden" name="foto_principal_url" value={foto} />
       <Secao titulo="Identificação">

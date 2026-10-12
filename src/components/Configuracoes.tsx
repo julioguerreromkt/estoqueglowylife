@@ -38,6 +38,11 @@ function useAcao() {
   return { pending, run, aviso };
 }
 
+/** Transforma um handler de FormData em onSubmit sem o reset automático do formulário. */
+function onSubmit(fn: (fd: FormData) => void) {
+  return (e: React.FormEvent<HTMLFormElement>) => { e.preventDefault(); const form = e.currentTarget; fn(new FormData(form)); };
+}
+
 function Usuarios({ perfis, unidades, eu }: { perfis: Perfil[]; unidades: Unidade[]; eu: Perfil }) {
   const { pending, run, aviso } = useAcao();
   const [novo, setNovo] = useState(false);
@@ -52,7 +57,7 @@ function Usuarios({ perfis, unidades, eu }: { perfis: Perfil[]; unidades: Unidad
           <tr key={p.id}><td className="font-semibold">{p.nome}{p.id === eu.id && <span className="badge badge-neutro ml-2">você</span>}</td><td>{p.email}</td><td>{PAPEL_LABEL[p.papel]}</td><td>{p.unidades_permitidas ? p.unidades_permitidas.map((id) => unidades.find((u) => u.id === id)?.nome ?? "?").join(", ") : "Todas"}</td><td><span className={`badge ${p.ativo ? "badge-normal" : "badge-neutro"}`}>{p.ativo ? "Ativo" : "Inativo"}</span></td><td><button className="btn btn-outline btn-sm" onClick={() => setEdit(p)}>Editar</button></td></tr>
         ))}</tbody></table></div>
       <Modal aberto={novo} onFechar={() => setNovo(false)} titulo="Novo usuário">
-        <form action={(fd) => run(() => criarUsuario(fd), () => setNovo(false))} className="space-y-3">
+        <form onSubmit={onSubmit((fd) => run(() => criarUsuario(fd), () => setNovo(false)))} className="space-y-3">
           <div><label className="label">Nome</label><input name="nome" required className="input" /></div>
           <div><label className="label">E-mail</label><input name="email" type="email" required className="input" /></div>
           <div><label className="label">Senha inicial (mín. 8 caracteres)</label><input name="senha" type="text" required minLength={8} className="input" /><p className="text-xs text-muted mt-1">Entregue ao colaborador e peça para trocar em "Minha conta".</p></div>
@@ -63,7 +68,7 @@ function Usuarios({ perfis, unidades, eu }: { perfis: Perfil[]; unidades: Unidad
       </Modal>
       <Modal aberto={!!edit} onFechar={() => setEdit(null)} titulo={`Editar ${edit?.nome ?? ""}`}>
         {edit && (<div className="space-y-4">
-          <form action={(fd) => run(() => atualizarPerfil(fd), () => setEdit(null))} className="space-y-3">
+          <form onSubmit={onSubmit((fd) => run(() => atualizarPerfil(fd), () => setEdit(null)))} className="space-y-3">
             <input type="hidden" name="id" value={edit.id} />
             <div><label className="label">Nome</label><input name="nome" required className="input" defaultValue={edit.nome} /></div>
             <div><label className="label">Perfil</label><select name="papel" className="input" defaultValue={edit.papel}>{Object.entries(PAPEL_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></div>
@@ -73,7 +78,7 @@ function Usuarios({ perfis, unidades, eu }: { perfis: Perfil[]; unidades: Unidad
           </form>
           <div className="border-t border-line pt-3">
             <label className="label">Redefinir senha</label>
-            <form action={(fd) => run(() => redefinirSenhaUsuario(edit.id, String(fd.get("senha"))))} className="flex gap-2"><input name="senha" type="text" minLength={8} required className="input" placeholder="nova senha" /><button className="btn btn-outline" disabled={pending}>Redefinir</button></form>
+            <form onSubmit={onSubmit((fd) => run(() => redefinirSenhaUsuario(edit.id, String(fd.get("senha")))))} className="flex gap-2"><input name="senha" type="text" minLength={8} required className="input" placeholder="nova senha" /><button className="btn btn-outline" disabled={pending}>Redefinir</button></form>
           </div>
         </div>)}
       </Modal>
@@ -99,7 +104,7 @@ function Unidades({ lista }: { lista: Unidade[] }) {
       <div className="card scroll-x"><table className="tbl"><thead><tr><th>Código</th><th>Nome</th><th>Cidade</th><th>Ordem</th><th>Status</th><th></th></tr></thead>
         <tbody>{lista.map((x) => <tr key={x.id}><td className="font-mono">{x.codigo}</td><td className="font-semibold">{x.nome}</td><td>{x.cidade}</td><td>{x.ordem}</td><td><span className={`badge ${x.ativa ? "badge-normal" : "badge-neutro"}`}>{x.ativa ? "Ativa" : "Inativa"}</span></td><td><button className="btn btn-outline btn-sm" onClick={() => setEdit(x)}>Editar</button></td></tr>)}</tbody></table></div>
       <Modal aberto={edit !== null} onFechar={() => setEdit(null)} titulo={u ? "Editar unidade" : "Nova unidade"}>
-        <form action={(fd) => run(() => salvarUnidade(fd), () => setEdit(null))} className="space-y-3">
+        <form onSubmit={onSubmit((fd) => run(() => salvarUnidade(fd), () => setEdit(null)))} className="space-y-3">
           {u && <input type="hidden" name="id" value={u.id} />}
           <div><label className="label">Código (curto, sem espaço)</label><input name="codigo" required className="input font-mono" defaultValue={u?.codigo ?? ""} placeholder="Ex.: RECIFE" /></div>
           <div><label className="label">Nome</label><input name="nome" required className="input" defaultValue={u?.nome ?? ""} /></div>
@@ -117,7 +122,7 @@ function Categorias({ lista }: { lista: Categoria[] }) {
   return (
     <div className="space-y-3">
       {aviso && <Aviso tipo={aviso.tipo} msg={aviso.msg} />}
-      <form action={(fd) => run(() => salvarCategoria(fd))} className="card p-4 flex flex-wrap gap-2 items-end">
+      <form onSubmit={onSubmit((fd) => run(() => salvarCategoria(fd)))} className="card p-4 flex flex-wrap gap-2 items-end">
         <div className="flex-1 min-w-[200px]"><label className="label">Nova categoria</label><input name="nome" required className="input" placeholder="Ex.: Suplementos em pó" /></div>
         <div><label className="label">Dentro de (opcional)</label><select name="categoria_pai_id" className="input"><option value="">Nenhuma</option>{lista.map((c) => <option key={c.id} value={c.id}>{c.nome}</option>)}</select></div>
         <button className="btn btn-primary" disabled={pending}>Adicionar</button>
@@ -133,7 +138,7 @@ function Campos({ lista }: { lista: CampoPersonalizado[] }) {
     <div className="space-y-3">
       {aviso && <Aviso tipo={aviso.tipo} msg={aviso.msg} />}
       <p className="text-sm text-muted">Campos criados aqui aparecem na ficha de todos os produtos, sem alterar o sistema.</p>
-      <form action={(fd) => run(() => salvarCampoPersonalizado(fd))} className="card p-4 grid md:grid-cols-4 gap-2 items-end">
+      <form onSubmit={onSubmit((fd) => run(() => salvarCampoPersonalizado(fd)))} className="card p-4 grid md:grid-cols-4 gap-2 items-end">
         <div><label className="label">Rótulo</label><input name="rotulo" required className="input" placeholder="Ex.: Validade padrão" /></div>
         <div><label className="label">Tipo</label><select name="tipo" className="input"><option value="texto">Texto</option><option value="numero">Número</option><option value="data">Data</option><option value="lista">Lista de opções</option><option value="booleano">Sim / Não</option></select></div>
         <div><label className="label">Opções (lista, separadas por vírgula)</label><input name="opcoes" className="input" placeholder="A, B, C" /></div>
@@ -199,7 +204,7 @@ function MinhaConta({ eu }: { eu: Perfil }) {
     <div className="card p-4 max-w-md space-y-3">
       {aviso && <Aviso tipo={aviso.tipo} msg={aviso.msg} />}
       <div className="text-sm"><b>{eu.nome}</b> · {eu.email} · {PAPEL_LABEL[eu.papel]}</div>
-      <form action={(fd) => run(() => alterarMinhaSenha(String(fd.get("senha"))))} className="space-y-2">
+      <form onSubmit={onSubmit((fd) => run(() => alterarMinhaSenha(String(fd.get("senha")))))} className="space-y-2">
         <div><label className="label">Nova senha (mín. 8 caracteres)</label><input name="senha" type="password" minLength={8} required className="input" autoComplete="new-password" /></div>
         <button className="btn btn-primary" disabled={pending}>Alterar senha</button>
       </form>

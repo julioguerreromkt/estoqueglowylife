@@ -47,7 +47,9 @@ export function MovimentoModal({ modo, onFechar, produtos, unidades, produtoFixo
   const saldoAtual = prod && uni ? prod.por_unidade?.[uni.codigo] ?? 0 : null;
   const hoje = new Date().toISOString().slice(0, 10);
 
-  function enviar(fd: FormData) {
+  function enviar(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
     start(async () => {
       const r = modo === "TRANSFERENCIA" ? await criarTransferencia(fd) : await registrarMovimentacao(fd);
       if (r.ok) { setAviso({ tipo: "ok", msg: r.msg ?? "Registrado" }); router.refresh(); setTimeout(onFechar, 600); }
@@ -58,7 +60,7 @@ export function MovimentoModal({ modo, onFechar, produtos, unidades, produtoFixo
   return (
     <Modal aberto={modo !== null} onFechar={onFechar} titulo={modo ? TITULO[modo] : ""}>
       {modo && (
-        <form action={enviar} className="space-y-3">
+        <form onSubmit={enviar} className="space-y-3">
           <input type="hidden" name="tipo" value={modo} />
           <div>
             <label className="label">Produto</label>

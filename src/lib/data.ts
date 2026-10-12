@@ -117,7 +117,7 @@ export async function getDashboard() {
   const [saldos, unidades, { data: recentes }, { data: transf }, { data: movs30 }, { data: pend }] = await Promise.all([
     getSaldosProduto(),
     getUnidades(),
-    supabase.from("movimentacoes").select("*, produtos(nome,sku), unidades(codigo,nome)").order("criado_em", { ascending: false }).limit(10),
+    supabase.from("movimentacoes").select("*, produtos(nome,sku), unidades(codigo,nome)").order("data_movimento", { ascending: false }).order("id", { ascending: false }).limit(10),
     supabase.from("transferencias").select("*, produtos(nome,sku), origem:unidades!transferencias_unidade_origem_id_fkey(codigo,nome), destino:unidades!transferencias_unidade_destino_id_fkey(codigo,nome)").in("status", ["ENVIADA", "EM_TRANSITO"]).order("enviada_em", { ascending: false }),
     supabase.from("movimentacoes").select("tipo, quantidade, data_movimento, produto_id, unidade_id").gte("data_movimento", de30s),
     supabase.from("pendencias_inventario").select("id").eq("status", "ABERTA"),

@@ -13,7 +13,9 @@ export default function Fornecedores({ lista, papel }: { lista: Fornecedor[]; pa
   const { aviso, setAviso } = useAviso();
   const [edit, setEdit] = useState<Fornecedor | null | "novo">(null);
   const f = edit === "novo" ? null : edit;
-  function enviar(fd: FormData) {
+  function enviar(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
     start(async () => { const r = await salvarFornecedor(fd); setAviso(r.ok ? { tipo: "ok", msg: "Fornecedor salvo" } : { tipo: "erro", msg: r.erro }); if (r.ok) { setEdit(null); router.refresh(); } });
   }
   return (
@@ -26,7 +28,7 @@ export default function Fornecedores({ lista, papel }: { lista: Fornecedor[]; pa
         ))}{lista.length === 0 && <tr><td colSpan={7} className="text-center text-muted py-6">Nenhum fornecedor cadastrado. A planilha original não tinha essa informação.</td></tr>}</tbody>
       </table></div>
       <Modal aberto={edit !== null} onFechar={() => setEdit(null)} titulo={f ? "Editar fornecedor" : "Novo fornecedor"}>
-        <form action={enviar} className="space-y-3">
+        <form onSubmit={enviar} className="space-y-3">
           {f && <input type="hidden" name="id" value={f.id} />}
           <div><label className="label">Nome *</label><input name="nome" required className="input" defaultValue={f?.nome ?? ""} /></div>
           <div className="grid grid-cols-2 gap-3">
