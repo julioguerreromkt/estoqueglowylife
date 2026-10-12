@@ -8,7 +8,7 @@ export default async function ConfiguracoesPage() {
   return (
     <div className="space-y-4">
       <div><h1 className="text-2xl font-bold text-navy">Usuários e Configurações</h1><p className="text-muted">{admin ? "Usuários, unidades, categorias, campos personalizados e importação" : "Importação, exportação e sua conta"}</p></div>
-      <Configuracoes eu={perfil!} perfis={perfis} unidades={unidades} categorias={categorias} campos={campos} temServiceKey={!!process.env.SUPABASE_SERVICE_ROLE_KEY} />
+      <Configuracoes eu={perfil!} perfis={perfis} unidades={unidades} categorias={categorias} campos={campos} />
     </div>
   );
 }

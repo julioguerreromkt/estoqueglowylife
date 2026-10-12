@@ -1,7 +1,6 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import type { Resultado } from "./estoque";
@@ -255,21 +254,13 @@ export async function desativarCampoPersonalizado(id: string): Promise<Resultado
 export async function criarUsuario(fd: FormData): Promise<Resultado> {
   try {
     const supabase = await createClient();
-    const { data: eu } = await supabase.rpc("eh_admin");
-    if (!eu) return { ok: false, erro: "Só o administrador cria usuários" };
-    const admin = createAdminClient();
-    if (!admin) return { ok: false, erro: "Chave SUPABASE_SERVICE_ROLE_KEY não configurada no servidor. Veja o guia de implantação." };
     const email = limpar(fd.get("email"))?.toLowerCase();
     const senha = limpar(fd.get("senha"));
     const nome = limpar(fd.get("nome"));
     const papel = limpar(fd.get("papel")) ?? "consulta";
     const unidades = fd.getAll("unidades").map(String).filter(Boolean);
     if (!email || !senha || !nome) return { ok: false, erro: "Nome, e-mail e senha são obrigatórios" };
-    if (senha.length < 8) return { ok: false, erro: "Senha precisa ter ao menos 8 caracteres" };
-    const { error } = await admin.auth.admin.createUser({
-      email, password: senha, email_confirm: true,
-      user_metadata: { nome, papel, unidades_permitidas: unidades.length ? unidades : null, ativo: true },
-    });
+    const { error } = await supabase.rpc("admin_criar_usuario", { p_email: email, p_senha: senha, p_nome: nome, p_papel: papel, p_unidades: unidades.length ? unidades : null });
     if (error) throw error;
     revalidatePath("/configuracoes");
     return { ok: true, msg: `Usuário ${email} criado` };
@@ -300,12 +291,7 @@ export async function atualizarPerfil(fd: FormData): Promise<Resultado> {
 export async function redefinirSenhaUsuario(id: string, senha: string): Promise<Resultado> {
   try {
     const supabase = await createClient();
-    const { data: eu } = await supabase.rpc("eh_admin");
-    if (!eu) return { ok: false, erro: "Só o administrador redefine senhas" };
-    const admin = createAdminClient();
-    if (!admin) return { ok: false, erro: "Chave SUPABASE_SERVICE_ROLE_KEY não configurada no servidor." };
-    if (senha.length < 8) return { ok: false, erro: "Senha precisa ter ao menos 8 caracteres" };
-    const { error } = await admin.auth.admin.updateUserById(id, { password: senha });
+    const { error } = await supabase.rpc("admin_redefinir_senha", { p_usuario: id, p_senha: senha });
     if (error) throw error;
     return { ok: true, msg: "Senha redefinida" };
   } catch (e) {

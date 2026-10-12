@@ -10,7 +10,7 @@ import { Modal, Aviso, useAviso } from "@/components/ui";
 
 type Aba = "usuarios" | "unidades" | "categorias" | "campos" | "importar" | "conta";
 
-export default function Configuracoes({ eu, perfis, unidades, categorias, campos, temServiceKey }: { eu: Perfil; perfis: Perfil[]; unidades: Unidade[]; categorias: Categoria[]; campos: CampoPersonalizado[]; temServiceKey: boolean }) {
+export default function Configuracoes({ eu, perfis, unidades, categorias, campos }: { eu: Perfil; perfis: Perfil[]; unidades: Unidade[]; categorias: Categoria[]; campos: CampoPersonalizado[] }) {
   const admin = eu.papel === "admin";
   const [aba, setAba] = useState<Aba>(admin ? "usuarios" : "conta");
   const abas: [Aba, string][] = admin
@@ -19,7 +19,7 @@ export default function Configuracoes({ eu, perfis, unidades, categorias, campos
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-1 border-b border-line">{abas.map(([k, v]) => <button key={k} className={`px-4 py-2 font-semibold text-sm border-b-2 -mb-px ${aba === k ? "border-gold text-navy" : "border-transparent text-muted"}`} onClick={() => setAba(k)}>{v}</button>)}</div>
-      {aba === "usuarios" && admin && <Usuarios perfis={perfis} unidades={unidades} temServiceKey={temServiceKey} eu={eu} />}
+      {aba === "usuarios" && admin && <Usuarios perfis={perfis} unidades={unidades} eu={eu} />}
       {aba === "unidades" && admin && <Unidades lista={unidades} />}
       {aba === "categorias" && admin && <Categorias lista={categorias} />}
       {aba === "campos" && admin && <Campos lista={campos} />}
@@ -38,14 +38,13 @@ function useAcao() {
   return { pending, run, aviso };
 }
 
-function Usuarios({ perfis, unidades, temServiceKey, eu }: { perfis: Perfil[]; unidades: Unidade[]; temServiceKey: boolean; eu: Perfil }) {
+function Usuarios({ perfis, unidades, eu }: { perfis: Perfil[]; unidades: Unidade[]; eu: Perfil }) {
   const { pending, run, aviso } = useAcao();
   const [novo, setNovo] = useState(false);
   const [edit, setEdit] = useState<Perfil | null>(null);
   const ativas = unidades.filter((u) => u.ativa);
   return (
     <div className="space-y-3">
-      {!temServiceKey && <Aviso tipo="erro" msg="Para criar usuários e redefinir senhas, a variável SUPABASE_SERVICE_ROLE_KEY precisa estar configurada na Vercel (guia de implantação, passo 4). Editar perfil e permissões já funciona." />}
       {aviso && <Aviso tipo={aviso.tipo} msg={aviso.msg} />}
       <div className="flex justify-between items-center"><p className="text-sm text-muted">Perfis: Administrador (tudo), Gestor (acompanha, ajusta e autoriza), Operador (cadastra e movimenta), Consulta (só visualiza). Restrinja por unidade quando o colaborador só atua em um local.</p><button className="btn btn-gold" onClick={() => setNovo(true)}>+ Novo usuário</button></div>
       <div className="card scroll-x"><table className="tbl"><thead><tr><th>Nome</th><th>E-mail</th><th>Perfil</th><th>Unidades</th><th>Status</th><th></th></tr></thead>
@@ -59,7 +58,7 @@ function Usuarios({ perfis, unidades, temServiceKey, eu }: { perfis: Perfil[]; u
           <div><label className="label">Senha inicial (mín. 8 caracteres)</label><input name="senha" type="text" required minLength={8} className="input" /><p className="text-xs text-muted mt-1">Entregue ao colaborador e peça para trocar em "Minha conta".</p></div>
           <div><label className="label">Perfil</label><select name="papel" className="input" defaultValue="operador">{Object.entries(PAPEL_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></div>
           <UnidadesCheck ativas={ativas} selecionadas={null} />
-          <div className="flex justify-end gap-2"><button type="button" className="btn btn-outline" onClick={() => setNovo(false)}>Cancelar</button><button className="btn btn-primary" disabled={pending || !temServiceKey}>Criar</button></div>
+          <div className="flex justify-end gap-2"><button type="button" className="btn btn-outline" onClick={() => setNovo(false)}>Cancelar</button><button className="btn btn-primary" disabled={pending}>Criar</button></div>
         </form>
       </Modal>
       <Modal aberto={!!edit} onFechar={() => setEdit(null)} titulo={`Editar ${edit?.nome ?? ""}`}>
@@ -74,7 +73,7 @@ function Usuarios({ perfis, unidades, temServiceKey, eu }: { perfis: Perfil[]; u
           </form>
           <div className="border-t border-line pt-3">
             <label className="label">Redefinir senha</label>
-            <form action={(fd) => run(() => redefinirSenhaUsuario(edit.id, String(fd.get("senha"))))} className="flex gap-2"><input name="senha" type="text" minLength={8} required className="input" placeholder="nova senha" /><button className="btn btn-outline" disabled={pending || !temServiceKey}>Redefinir</button></form>
+            <form action={(fd) => run(() => redefinirSenhaUsuario(edit.id, String(fd.get("senha"))))} className="flex gap-2"><input name="senha" type="text" minLength={8} required className="input" placeholder="nova senha" /><button className="btn btn-outline" disabled={pending}>Redefinir</button></form>
           </div>
         </div>)}
       </Modal>
