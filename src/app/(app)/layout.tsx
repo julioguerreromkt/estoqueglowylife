@@ -1,6 +1,6 @@
 import Sidebar from "@/components/Sidebar";
 import { getSessao, getUnidades } from "@/lib/data";
-import { sair } from "@/app/actions/cadastros";
+import BotaoSair from "@/components/BotaoSair";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const { perfil, user } = await getSessao();
@@ -10,7 +10,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <div className="card p-8 max-w-md text-center">
           <h1 className="text-xl font-bold text-navy">Acesso ainda não liberado</h1>
           <p className="text-muted mt-2">Seu usuário ({user.email}) existe, mas está inativo ou sem perfil. Peça ao administrador para ativar o acesso.</p>
-          <form action={sair} className="mt-4"><button className="btn btn-outline">Sair</button></form>
+          <BotaoSair />
         </div>
       </main>
     );

@@ -2,7 +2,6 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import type { Resultado } from "./estoque";
 
 function erro(e: unknown): Resultado {
@@ -311,20 +310,20 @@ export async function alterarMinhaSenha(senha: string): Promise<Resultado> {
   }
 }
 
-export async function entrar(fd: FormData) {
+export async function entrar(fd: FormData): Promise<Resultado> {
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({
     email: String(fd.get("email")).trim().toLowerCase(),
     password: String(fd.get("senha")),
   });
-  if (error) redirect("/login?erro=" + encodeURIComponent("E-mail ou senha incorretos"));
-  redirect("/");
+  if (error) return { ok: false, erro: "E-mail ou senha incorretos" };
+  return { ok: true };
 }
 
-export async function sair() {
+export async function sair(): Promise<Resultado> {
   const supabase = await createClient();
   await supabase.auth.signOut();
-  redirect("/login");
+  return { ok: true };
 }
 
 // ---------------- IMPORTAÇÃO ----------------

@@ -57,7 +57,7 @@ export default function Sidebar({ unidades, perfil }: { unidades: Unidade[]; per
         <div className="mt-auto px-5 py-4 border-t border-white/10 text-sm">
           <div className="font-semibold truncate">{perfil.nome}</div>
           <div className="text-white/60 text-xs">{PAPEL_LABEL[perfil.papel]}</div>
-          <form action={sair}><button className="mt-2 flex items-center gap-2 text-white/70 hover:text-white text-xs"><LogOut size={14} /> Sair</button></form>
+          <button onClick={() => sair().then(() => window.location.assign("/login"))} className="mt-2 flex items-center gap-2 text-white/70 hover:text-white text-xs"><LogOut size={14} /> Sair</button>
         </div>
       </aside>
     </>
