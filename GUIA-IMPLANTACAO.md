@@ -1,43 +1,61 @@
-# Guia de implantação (passo a passo, sem programar)
+# Guia de implantação e manutenção (sem programar)
 
-O banco já está no ar no Supabase. Falta só publicar a tela na Vercel. São 3 blocos.
+O sistema já está no ar: **https://estoque.glowylife.com.br**
 
-## Bloco 1 · Criar o repositório no GitHub (2 minutos)
+- Banco de dados, login e fotos: Supabase (projeto `estoque-glowy`, região São Paulo).
+- Tela do sistema: Hostinger, hospedagem Node.js, subdomínio `estoque.glowylife.com.br`.
+- Código: GitHub, `julioguerreromkt/estoqueglowylife`.
 
-1. Abra https://github.com/new no navegador, logado na conta `julioguerreromkt`.
-2. Em **Repository name**, digite: `glowy-estoque`
-3. Marque **Private**.
-4. NÃO marque "Add a README" nem ".gitignore".
-5. Clique no botão verde **Create repository**.
-6. Me avise aqui no chat que criou. Eu envio o código para dentro dele.
+## Variáveis de ambiente usadas
 
-## Bloco 2 · Pegar a chave de serviço no Supabase (1 minuto)
+Só duas, as duas públicas por desenho (o que protege os dados é o RLS do banco, não o segredo delas):
 
-Essa chave é o que permite ao administrador criar usuários pela tela do sistema. Ela nunca vai para o navegador, só para o servidor da Vercel.
+- `NEXT_PUBLIC_SUPABASE_URL` = `https://ygeyhtsrskwzysxpdlzv.supabase.co`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY` = chave "anon" do projeto
 
-1. Abra https://supabase.com/dashboard/project/ygeyhtsrskwzysxpdlzv/settings/api-keys
-2. Procure a chave chamada **service_role** (ou "Secret keys" > "service_role"). Clique em **Reveal** e depois em **Copy**.
-3. Guarde num bloco de notas por 5 minutos. Você vai colar na Vercel no bloco 3. Não cole aqui no chat.
+**O sistema não usa a chave `service_role` em lugar nenhum.** A criação de usuário e a
+redefinição de senha pelo administrador são feitas por funções dentro do banco
+(`admin_criar_usuario`, `admin_redefinir_senha`), que conferem sozinhas se quem chamou é
+administrador. Nunca cole a `service_role` em painel de hospedagem, no código ou no chat:
+ela ignora todas as regras de acesso.
 
-## Bloco 3 · Publicar na Vercel (5 minutos)
+## Como publicar uma atualização do código
 
-1. Abra https://vercel.com/signup e entre com **Continue with GitHub** (use a mesma conta do GitHub). Se já tem conta, abra https://vercel.com/new
-2. Na tela **Import Git Repository**, encontre `glowy-estoque` e clique em **Import**. Se não aparecer, clique em "Adjust GitHub App Permissions" e libere o repositório.
-3. Deixe **Framework Preset** em Next.js (vem automático).
-4. Abra a seção **Environment Variables** e cole, uma por linha:
-   - Nome `NEXT_PUBLIC_SUPABASE_URL` · Valor `https://ygeyhtsrskwzysxpdlzv.supabase.co`
-   - Nome `NEXT_PUBLIC_SUPABASE_ANON_KEY` · Valor: a chave "anon" (está no mesmo painel de API Keys do Supabase, aba "Legacy anon key", ou eu mando aqui no chat, ela é pública)
-   - Nome `SUPABASE_SERVICE_ROLE_KEY` · Valor: a chave do bloco 2
-5. Clique em **Deploy**. Espere uns 2 minutos até aparecer "Congratulations".
-6. Clique em **Visit**. O endereço será algo como `https://glowy-estoque.vercel.app`. Esse é o link do sistema.
-7. Me mande o link aqui. Eu entro, testo cada tela e devolvo o boletim.
+1. O código novo vai para o GitHub (`main`).
+2. No painel da Hostinger, hospedagem do `estoque.glowylife.com.br`: **Git** > implantar o
+   repositório na pasta `repo`.
+3. Ainda na Hostinger: **Node.js** > nova build a partir do arquivo
+   `repo/deploy/estoque-glowy.zip`, com Node 22, tipo `next`, pasta de saída `.next`,
+   script de build `build`, gerenciador `npm`.
+4. A build leva de 2 a 4 minutos. Quando terminar, o site já está com a versão nova.
 
-## Depois (opcional)
+Observação técnica: a build roda com webpack (`next build --webpack`) porque o Turbopack
+quebrou no ambiente da Hostinger ao processar o CSS.
 
-- Domínio próprio, ex.: `estoque.glowylife.com.br`: na Vercel, Settings > Domains > Add. Ela mostra o registro CNAME para criar no painel da Hostinger.
-- Toda vez que eu atualizar o código no GitHub, a Vercel publica sozinha em 2 minutos.
+## Banco de dados
+
+A estrutura completa está em `supabase/migrations/`, na ordem em que foi aplicada:
+
+| Arquivo | O que contém |
+|---|---|
+| `20261012181140_modelo_estoque_v1.sql` | 12 tabelas, funções de permissão, gatilhos de auditoria, operações de estoque, transferências, view do catálogo, RLS, storage e as unidades Sede e Aracaju |
+| `20261012193849_funcoes_admin_usuarios.sql` | Criação de usuário e redefinição de senha pelo administrador, direto no banco |
+| `20261012200130_fix_protecao_quantidade.sql` | Correção da trava que impede alterar quantidade fora de uma movimentação |
+
+## Backup e recuperação
+
+O que existe hoje, com o plano Free do Supabase:
+
+- Backup automático diário do banco, mantido pelo próprio Supabase, com retenção curta
+  (Point-in-Time Recovery exige plano pago).
+- Exportação manual: **Relatórios** > Posição de estoque e Movimentações, em Excel ou CSV.
+  Guardar esses dois arquivos uma vez por semana numa pasta do Drive já cobre o pior caso.
+
+O que ainda **não** existe e precisa de decisão sua: rotina automática de backup fora do
+Supabase e teste periódico de restauração. Está na lista de pendências do boletim.
 
 ## Seu acesso
 
 - E-mail: supernegociohoje@gmail.com
-- Senha inicial: `Glowy2026!Estoque` (troque no primeiro acesso em Usuários e Configurações > Minha conta)
+- Senha inicial temporária entregue no chat. **Troque no primeiro acesso**, em
+  Usuários e Configurações > Minha conta.
