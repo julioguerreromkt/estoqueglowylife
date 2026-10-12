@@ -1,36 +1,32 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Estoque Glowy Life
 
-## Getting Started
+Sistema web de gestão de estoque multiunidades da Glowy Life (Sede e Aracaju), substituto da planilha CONTROLE - GLOWY LIFE.
 
-First, run the development server:
+- Banco, login, fotos e regras de acesso: Supabase (projeto `estoque-glowy`, região São Paulo)
+- Aplicação: Next.js 16 (App Router, TypeScript, Tailwind)
+- Hospedagem: Vercel
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Como rodar no seu computador (opcional)
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+1. Instale o Node.js 22 ou superior.
+2. Copie `.env.example` para `.env.local` e preencha as chaves (estão no painel do Supabase, em Project Settings > API Keys).
+3. `npm install` e depois `npm run dev`. Abra http://localhost:3000.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Estrutura
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `src/app/(app)/` telas: dashboard, produtos, estoque por unidade, movimentações, transferências, inventário, fornecedores, relatórios, configurações
+- `src/app/actions/` gravações no banco (server actions)
+- `src/app/api/exportar/` exportação Excel e CSV
+- `src/lib/` acesso a dados, tipos e formatação
+- `src/components/` componentes de tela
+- `supabase/migrations/` modelo do banco (referência; já aplicado no projeto)
 
-## Learn More
+## Regras de estoque garantidas pelo banco
 
-To learn more about Next.js, take a look at the following resources:
+- Estoque nunca fica negativo em lançamento novo.
+- Toda movimentação grava saldo anterior, quantidade, saldo resultante, usuário e data.
+- Ajuste de inventário exige justificativa e perfil Gestor ou Administrador.
+- Transferência em 3 etapas (enviada, em trânsito, recebida): a quantidade em trânsito não conta em nenhuma unidade.
+- Acesso por perfil (Administrador, Gestor, Operador, Consulta) e por unidade.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Veja `GUIA-IMPLANTACAO.md` para colocar no ar e `GUIA-OPERACAO.md` para o dia a dia.
